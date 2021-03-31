@@ -24,6 +24,7 @@ def get_titles_from_search_results(filename):
         authorName = name.find(class_="authorName")
         book.append((bookTitle.text.strip(), authorName.text.strip()))
     file_open.close()
+    
     return book
 
 
@@ -41,8 +42,20 @@ def get_search_links():
 
     """
 
-    pass
-
+    url_list = []
+    url = "https://www.goodreads.com/search?q=fantasy&qid=NwUsLiA2Nc"
+    get_request = requests.get(url)
+    counter = 0
+    if get_request.ok:
+        base_url = "https://www.goodreads.com"
+        soup = BeautifulSoup(get_request.content, "html.parser")
+        links = soup.find_all("a", class_="bookTitle")
+        for link in links:
+            if counter < 10:
+                url_list.append(base_url + link.get("href"))
+                counter += 1
+    
+    return url_list
 
 def get_book_summary(book_url):
     """
@@ -58,7 +71,23 @@ def get_book_summary(book_url):
     Make sure to strip() any newlines from the book title and number of pages.
     """
 
-    pass
+    book_info = []
+
+    get_request = requests.get(book_url)   
+    
+    if get_request.ok:
+        soup = BeautifulSoup(get_request.content, "html.parser")
+        title = soup.find("h1", id = "bookTitle")
+        author = soup.find("span", itemprop = "name")
+        numPages = soup.find("span", itemprop = "numberOfPages")
+        regex = r"\d+"
+        number = re.findall(regex, numPages.text)
+
+        book_info.append(title.text.strip())
+        book_info.append(author.text.strip())
+        book_info.append(int(number[0]))    
+
+    return(tuple(book_info))
 
 
 def summarize_best_books(filepath):
@@ -110,7 +139,7 @@ def extra_credit(filepath):
 class TestCases(unittest.TestCase):
 
     # call get_search_links() and save it to a static variable: search_urls
-
+    search_urls = get_search_links()
 
     def test_get_titles_from_search_results(self):
         # call get_titles_from_search_results() on search_results.htm and save to a local variable
@@ -122,7 +151,6 @@ class TestCases(unittest.TestCase):
         # check that the variable you saved after calling the function is a list
         self.assertTrue(isinstance(test_list, list))
         # check that each item in the list is a tuple
-        print(test_list)
         for item in test_list:
             self.assertTrue(isinstance(item, tuple))
         # check that the first book and author tuple is correct (open search_results.htm and find it)
@@ -134,32 +162,41 @@ class TestCases(unittest.TestCase):
 
     def test_get_search_links(self):
         # check that TestCases.search_urls is a list
-
+        self.assertTrue(isinstance(TestCases.search_urls, list))
         # check that the length of TestCases.search_urls is correct (10 URLs)
-
-
+        self.assertEqual(len(TestCases.search_urls), 10)
         # check that each URL in the TestCases.search_urls is a string
+        for url in TestCases.search_urls:
+            self.assertTrue(isinstance(url, str))
         # check that each URL contains the correct url for Goodreads.com followed by /book/show/
-        pass
+            self.assertIn("https://www.goodreads.com/book/show/", url)
 
 
     def test_get_book_summary(self):
         # create a local variable – summaries – a list containing the results from get_book_summary()
+        summaries = []
+       
         # for each URL in TestCases.search_urls (should be a list of tuples)
+        for url in TestCases.search_urls:
+            summary = get_book_summary(url)
+            summaries.append(summary)
 
         # check that the number of book summaries is correct (10)
+        self.assertEqual(len(summaries), 10)
 
+        for summary in summaries:
             # check that each item in the list is a tuple
-
+            self.assertTrue(isinstance(summary, tuple))
             # check that each tuple has 3 elements
-
+            self.assertEqual(len(summary), 3)
             # check that the first two elements in the tuple are string
-
+            self.assertTrue(isinstance(summary[0], str))
+            self.assertTrue(isinstance(summary[1], str))           
             # check that the third element in the tuple, i.e. pages is an int
+            self.assertTrue(isinstance(summary[2], int))           
 
-            # check that the first book in the search has 337 pages
-            pass
-
+        # check that the first book in the search has 337 pages
+        self.assertEqual(summaries[0][2], 337)
 
     def test_summarize_best_books(self):
         # call summarize_best_books and save it to a variable
