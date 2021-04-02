@@ -105,7 +105,8 @@ def summarize_best_books(filepath):
     book = []
     file_info = []
     book_category = []
-    book_title = []    
+    book_title = []
+    book_url = []    
 
     base_path = os.path.abspath(os.path.dirname(__file__))
     full_path = os.path.join(base_path, filepath)
@@ -116,21 +117,26 @@ def summarize_best_books(filepath):
 
     soup = BeautifulSoup(file_info, "html.parser")
 
+    categories = soup.find_all("h4", class_="category__copy")   
+    for category in categories:
+        book_category.append(category.text.strip())
+
     titles = soup.find_all("img", class_ = "category__winnerImage")
     for title in titles:
         book_title.append(title['alt'].strip())
 
-    categories = soup.find_all("h4", class_="category__copy")
-
-    for category in categories:
-        book_category.append(category.text.strip())
+    urls = soup.find_all("div", class_ = "category clearFix")
+    for url in urls:
+        link = url.find('a')
+        book_url.append(link.get('href', None))
 
     for index in range(len(book_category)):
         category = book_category[index]
         title = book_title[index]
-        book.append((category, title))
+        url = book_url[index]
+        book.append((category, title, url))
     
-    print(book)
+    return book
 
 
 def write_csv(data, filename):
@@ -219,11 +225,11 @@ class TestCases(unittest.TestCase):
     #     # check that the number of book summaries is correct (10)
     #     self.assertEqual(len(summaries), 10)
 
-    #     for summary in summaries:
-    #         # check that each item in the list is a tuple
-    #         self.assertTrue(isinstance(summary, tuple))
-    #         # check that each tuple has 3 elements
-    #         self.assertEqual(len(summary), 3)
+        # for summary in summaries:
+        #     # check that each item in the list is a tuple
+        #     self.assertTrue(isinstance(summary, tuple))
+        #     # check that each tuple has 3 elements
+        #     self.assertEqual(len(summary), 3)
     #         # check that the first two elements in the tuple are string
     #         self.assertTrue(isinstance(summary[0], str))
     #         self.assertTrue(isinstance(summary[1], str))           
@@ -235,40 +241,48 @@ class TestCases(unittest.TestCase):
 
     def test_summarize_best_books(self):
         # call summarize_best_books and save it to a variable
-        # best_books = summarize_best_books("best_books_2020.htm")
+        best_books = summarize_best_books("best_books_2020.htm")
         # check that we have the right number of best books (20)
+        self.assertEqual(len(best_books), 20)
 
-            # assert each item in the list of best books is a tuple
-
-            # check that each tuple has a length of 3
+        # assert each item in the list of best books is a tuple
+        for item in best_books:
+            self.assertTrue(isinstance(item, tuple))
+        # check that each tuple has a length of 3
+            self.assertEqual(len(item), 3)
 
         # check that the first tuple is made up of the following 3 strings:'Fiction', "The Midnight Library", 'https://www.goodreads.com/choiceawards/best-fiction-books-2020'
+        self.assertEqual(best_books[0][0],"Fiction")
+        self.assertEqual(best_books[0][1],"The Midnight Library")
+        self.assertEqual(best_books[0][2],"https://www.goodreads.com/choiceawards/best-fiction-books-2020")
 
         # check that the last tuple is made up of the following 3 strings: 'Picture Books', 'Antiracist Baby', 'https://www.goodreads.com/choiceawards/best-picture-books-2020'
-        pass
+        self.assertEqual(best_books[-1][0],"Picture Books")
+        self.assertEqual(best_books[-1][1],"Antiracist Baby")
+        self.assertEqual(best_books[-1][2],"https://www.goodreads.com/choiceawards/best-picture-books-2020")
 
     def test_write_csv(self):
         # call get_titles_from_search_results on search_results.htm and save the result to a variable
-        search_titles = get_titles_from_search_results("search_results.htm")
-        # print(search_titles)       
-        # call write csv on the variable you saved and 'test.csv'
-        write_csv(search_titles, "test.csv")
-        # read in the csv that you wrote (create a variable csv_lines - a list containing all the lines in the csv you just wrote to above)
-        file_obj = open("test.csv")
-        csv_lines = file_obj.readlines()
-        file_obj.close() 
+        # search_titles = get_titles_from_search_results("search_results.htm")
+        # # print(search_titles)       
+        # # call write csv on the variable you saved and 'test.csv'
+        # write_csv(search_titles, "test.csv")
+        # # read in the csv that you wrote (create a variable csv_lines - a list containing all the lines in the csv you just wrote to above)
+        # file_obj = open("test.csv")
+        # csv_lines = file_obj.readlines()
+        # file_obj.close() 
 
-        print(csv_lines)
+        # print(csv_lines)
 
-        # check that there are 21 lines in the csv
-        self.assertEqual(len(csv_lines), 21)
+        # # check that there are 21 lines in the csv
+        # self.assertEqual(len(csv_lines), 21)
 
-        # check that the header row is correct
-        self.assertEqual(csv_lines[0], "\"Book Title, Author Name\"\n")
+        # # check that the header row is correct
+        # self.assertEqual(csv_lines[0], "\"Book Title, Author Name\"\n")
 
-        # check that the next row is 'Harry Potter and the Deathly Hallows (Harry Potter, #7)', 'J.K. Rowling'
-        self.assertEqual(csv_lines[1], "\"Harry Potter and the Deathly Hallows (Harry Potter, #7)\", J.K. Rowling\n'")
-        # check that the last row is 'Harry Potter: The Prequel (Harry Potter, #0.5)', 'J.K. Rowling'
+        # # check that the next row is 'Harry Potter and the Deathly Hallows (Harry Potter, #7)', 'J.K. Rowling'
+        # self.assertEqual(csv_lines[1], "\"Harry Potter and the Deathly Hallows (Harry Potter, #7)\", J.K. Rowling\n'")
+        # # check that the last row is 'Harry Potter: The Prequel (Harry Potter, #0.5)', 'J.K. Rowling'
         pass
 
 
