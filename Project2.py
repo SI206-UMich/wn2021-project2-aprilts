@@ -1,3 +1,5 @@
+#By April Tsai and Morgan Bo
+
 from bs4 import BeautifulSoup
 import requests
 import re
@@ -160,11 +162,10 @@ def write_csv(data, filename):
     """
     
     csv_file = open(filename, 'w')
-    csv_writer = csv.writer(csv_file)
+    csv_writer = csv.writer(csv_file, delimiter = ",")
     csv_writer.writerow(['Book Title, Author Name'])
     for tuples in data:
-        line = tuples[0] + ", " + tuples[1]
-        csv_writer.writerow([line])
+        csv_writer.writerow(tuples)
     csv_file.close()
 
 
@@ -280,10 +281,10 @@ class TestCases(unittest.TestCase):
         self.assertEqual(csv_lines[0], "\"Book Title, Author Name\"\n")
 
         # check that the next row is 'Harry Potter and the Deathly Hallows (Harry Potter, #7)', 'J.K. Rowling'
-        self.assertEqual(csv_lines[1], "\"Harry Potter and the Deathly Hallows (Harry Potter, #7), J.K. Rowling\"\n")
+        self.assertEqual(csv_lines[1], "\"Harry Potter and the Deathly Hallows (Harry Potter, #7)\",J.K. Rowling\n")
 
         # check that the last row is 'Harry Potter: The Prequel (Harry Potter, #0.5)', 'J.K. Rowling'
-        self.assertEqual(csv_lines[-1], "\"Harry Potter: The Prequel (Harry Potter, #0.5), J.K. Rowling\"\n")
+        self.assertEqual(csv_lines[-1], "\"Harry Potter: The Prequel (Harry Potter, #0.5)\",J.K. Rowling\n")
 
 
 if __name__ == '__main__':
